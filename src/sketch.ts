@@ -1,3 +1,4 @@
+import { ADN } from "./adn";
 import { p5Glob } from "./index";
 import { Individual } from "./individual";
 import * as p5 from "p5";
@@ -70,9 +71,22 @@ export const obstacles = [
     ]
 
   ]
-  
+
 export const width = 600;
 export const height = 1000;
+
+export const roads = [
+    {
+        x: 0,
+        y: 515,
+        width: 600,
+        height: 100,
+        deadly: true,
+        color: [0, 0, 0]
+    }
+]
+
+export const adn = new ADN(3, 3, 400);
 
 
 export function setup(p5: p5) {
@@ -87,15 +101,30 @@ export function draw(p5: p5) {
     // Draw rectangle
     p5.stroke(0);
     p5.noFill();
-    for (let obstacle of obstacles) {
-        p5.fill(p5.color(obstacle.color));
-        p5.rect(obstacle.x, obstacle.y, obstacle.w, obstacle.h);
+    // for (let obstacle of obstacles) {
+    //     p5.fill(p5.color(obstacle.color));
+    //     p5.rect(obstacle.x, obstacle.y, obstacle.w, obstacle.h);
+    // }
+    for(let fence of adn.fences){
+        p5.fill(p5.color(fence.color));
+        p5.rect(fence.x, fence.y, fence.width, fence.height);
     }
-    for (let pipes of pipeGroups) {
-        for (let pipe of pipes) {
+    // for (let pipes of pipeGroups) {
+    //     for (let pipe of pipes) {
+    //         p5.fill(p5.color(pipe.color));
+    //         p5.rect(pipe.x, pipe.y, pipe.w, pipe.h);
+    //     }
+    // }
+    for(let pipeGroup of adn.pipeGroups){
+        for(let pipe of pipeGroup){
             p5.fill(p5.color(pipe.color));
-            p5.rect(pipe.x, pipe.y, pipe.w, pipe.h);
+            p5.rect(pipe.x, pipe.y, pipe.width, pipe.height);
         }
+    }
+
+    for (let road of roads) {
+        p5.fill(p5.color(road.color));
+        p5.rect(road.x, road.y, road.width, road.height);
     }
 
     for (let individual of individuals) {

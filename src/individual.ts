@@ -1,6 +1,6 @@
 import p5 from "p5";
 import {p5Glob} from "./index";
-import { height, obstacles, pipeGroups, width } from "./sketch";
+import { adn, height, roads, width } from "./sketch";
 
 export class Individual {
     size: number;
@@ -22,24 +22,24 @@ export class Individual {
     }
 
     horizontalCollision(nextX: number, nextY: number, obstacle: any) {
-        return (nextX + this.size / 2 > obstacle.x && nextX - this.size / 2 < obstacle.x + obstacle.w &&
+        return (nextX + this.size / 2 > obstacle.x && nextX - this.size / 2 < obstacle.x + obstacle.width &&
             this.y + this.size / 2 > obstacle.y && this.y - this.size / 2 < obstacle.y + obstacle.h)
     }
 
     verticalCollision(nextX: number, nextY: number, obstacle: any) {
-        return (nextY + this.size / 2 > obstacle.y && nextY - this.size / 2 < obstacle.y + obstacle.h &&
-            this.x + this.size / 2 > obstacle.x && this.x - this.size / 2 < obstacle.x + obstacle.w)
+        return (nextY + this.size / 2 > obstacle.y && nextY - this.size / 2 < obstacle.y + obstacle.height &&
+            this.x + this.size / 2 > obstacle.x && this.x - this.size / 2 < obstacle.x + obstacle.width)
     }
 
     rectCollision(nextX: number, nextY: number, obstacle: any) {
-        return (nextX + this.size / 2 > obstacle.x && nextX - this.size / 2 < obstacle.x + obstacle.w &&
-            nextY + this.size / 2 > obstacle.y && nextY - this.size / 2 < obstacle.y + obstacle.h)
+        return (nextX + this.size / 2 > obstacle.x && nextX - this.size / 2 < obstacle.x + obstacle.width &&
+            nextY + this.size / 2 > obstacle.y && nextY - this.size / 2 < obstacle.y + obstacle.height)
     }
 
     intersectsLine(nextX: number, nextY: number) {
         // Check collisions with obstacle
         // Horizontal collision (left and right sides)
-        for (let obstacle of obstacles) {
+        for (let obstacle of adn.fences) {
             if(this.horizontalCollision(nextX, nextY, obstacle)){
             
                 this.speedX *= -1;
@@ -47,10 +47,7 @@ export class Individual {
                     this.x = obstacle.x - this.size / 2;
 
                 } else {
-                    this.x = obstacle.x + obstacle.w + this.size / 2;
-                }
-                if (obstacle.deadly) {
-                    this.alive = false;
+                    this.x = obstacle.x + obstacle.width + this.size / 2;
                 }
             }
 
@@ -61,10 +58,7 @@ export class Individual {
                 if (this.y < obstacle.y) {
                     this.y = obstacle.y - this.size / 2;
                 } else {
-                    this.y = obstacle.y + obstacle.h + this.size / 2;
-                }
-                if (obstacle.deadly) {
-                    this.alive = false;
+                    this.y = obstacle.y + obstacle.height + this.size / 2;
                 }
             }
         }
@@ -72,23 +66,22 @@ export class Individual {
 
     //when colliding with pipes
     intersectPipe(nextX: number, nextY: number) {
-        for (const pipes of pipeGroups) {
+        for (const pipes of adn.pipeGroups) {
             if (this.rectCollision(nextX, nextY, pipes[0])) {
-                this.handlePipeCollision(pipes[1], pipes[0]);
+                this.handlePipeCollision(pipes[1]);
             } else if (this.rectCollision(nextX, nextY, pipes[1])) {
-                this.handlePipeCollision(pipes[0], pipes[1]);
+                this.handlePipeCollision(pipes[0]);
             }
         }
     }
 
-    handlePipeCollision(targetPipe: any, sourcePipe: any) {
-        console.log(`collided with pipe${sourcePipe === pipeGroups[0][0] ? '0' : '1'}`);
-        let teleportedX = targetPipe.x + targetPipe.w / 2;
-        let teleportedY = targetPipe.y + targetPipe.h * 1.5;
+    handlePipeCollision(targetPipe: any) {
+        let teleportedX = targetPipe.x + targetPipe.width / 2;
+        let teleportedY = targetPipe.y + targetPipe.height * 1.5;
 
-        for (const obstacle of obstacles) {
-            if (this.rectCollision(teleportedX, teleportedY, obstacle)) {
-                teleportedY = targetPipe.y - targetPipe.h * 1.5;
+        for (const road of roads) {
+            if (this.rectCollision(teleportedX, teleportedY, road)) {
+                teleportedY = targetPipe.y - targetPipe.height * 1.5;
             }
         }
         this.x = teleportedX;
@@ -113,6 +106,10 @@ export class Individual {
 
         // Check collisions with pipes
         this.intersectPipe(nextX, nextY);
+
+        if(this.rectCollision(nextX, nextY, roads[0])){
+            this.alive = false;
+        }
 
 
         // Update position
