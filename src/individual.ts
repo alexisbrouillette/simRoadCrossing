@@ -1,6 +1,7 @@
 import p5 from "p5";
 import {p5Glob} from "./index";
-import { adn, height, roads, width } from "./sketch";
+import { height, roads, width } from "./sketch";
+import { ADN } from "./adn";
 
 export class Individual {
     size: number;
@@ -10,15 +11,26 @@ export class Individual {
     speedY: number;
     color: p5.Color;
     alive: boolean;
+    pipeUsages: number;
+    adn: ADN;
 
-    constructor() {
+    constructor(adn: ADN) {
         this.size = 10;
-        this.x = p5Glob.random(this.size, width - this.size);
-        this.y = p5Glob.random(this.size, height - this.size);
+        const startingPoints = [
+            { x: 200, y: 100 },
+            { x: 800, y: 100 },
+        ];
+        const randomIndex = p5Glob.floor(p5Glob.random(startingPoints.length));
+        this.x = startingPoints[randomIndex].x;
+        this.y = startingPoints[randomIndex].y;
+        // this.x = p5Glob.random(this.size, width - this.size);
+        // this.y = p5Glob.random(this.size, height - this.size);
         this.speedX = p5Glob.random(-2, 2);
         this.speedY = p5Glob.random(-2, 2);
         this.color =  p5Glob.color(p5Glob.random(100, 255), p5Glob.random(100, 255), p5Glob.random(100, 255));
         this.alive = true;
+        this.pipeUsages = 0;
+        this.adn = adn;
     }
 
     horizontalCollision(nextX: number, nextY: number, obstacle: any) {
@@ -39,8 +51,9 @@ export class Individual {
     intersectsLine(nextX: number, nextY: number) {
         // Check collisions with obstacle
         // Horizontal collision (left and right sides)
-        for (let obstacle of adn.fences) {
-            if(this.horizontalCollision(nextX, nextY, obstacle)){
+        for (let obstacle of this.adn.fences) {
+            const otherSide = { x: obstacle.x, y: (obstacle.y + roads[0].height + obstacle.height), width: obstacle.width, height: obstacle.height };
+            if(this.horizontalCollision(nextX, nextY, obstacle) || this.horizontalCollision(nextX, nextY, otherSide)){
             
                 this.speedX *= -1;
                 if (this.x < obstacle.x) {
@@ -61,16 +74,27 @@ export class Individual {
                     this.y = obstacle.y + obstacle.height + this.size / 2;
                 }
             }
+            else if(this.verticalCollision(nextX, nextY, otherSide)){
+                this.speedY = 0;
+                this.speedX = p5Glob.random(-2, 2)
+                if (this.y < otherSide.y) {
+                    this.y = otherSide.y - this.size / 2;
+                } else {
+                    this.y = otherSide.y + otherSide.height + this.size / 2;
+                }
+            }
         }
     }
 
     //when colliding with pipes
     intersectPipe(nextX: number, nextY: number) {
-        for (const pipes of adn.pipeGroups) {
+        for (const pipes of this.adn.pipeGroups) {
             if (this.rectCollision(nextX, nextY, pipes[0])) {
                 this.handlePipeCollision(pipes[1]);
+                this.pipeUsages++;
             } else if (this.rectCollision(nextX, nextY, pipes[1])) {
                 this.handlePipeCollision(pipes[0]);
+                this.pipeUsages++;
             }
         }
     }
