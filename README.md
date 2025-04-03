@@ -1,4 +1,4 @@
-# Ooptimizing fences position for animal road crossing
+# Optimizing fences position for animal road crossing
 This project was inspired by the work of Wilansky and Jaeger from this paper https://www.sciencedirect.com/science/article/pii/S0304380024001728.
 
 ![](simRoad.gif)
